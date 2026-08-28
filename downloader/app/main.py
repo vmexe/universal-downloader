@@ -144,15 +144,21 @@ class MainWindow(QMainWindow):
         self.status_label.setText("Cancellation is not yet wired to in-flight engines")
 
     # -- queue rendering --------------------------------------------------
+    def _find_row_by_url(self, url: str) -> QListWidgetItem | None:
+        for i in range(self.queue_list.count()):
+            item = self.queue_list.item(i)
+            if item.data(Qt.ItemDataRole.UserRole) == url:
+                return item
+        return None
+
     def _render_item(self, task: DownloadTask) -> None:
-        item = self.queue_list.findItems(task.request.url, Qt.MatchFlag.MatchExactly)
-        if item:
-            widget = item[0]
-            widget.setText(self._task_text(task))
-        else:
-            li = QListWidgetItem(self._task_text(task))
-            li.setData(256, task.request.url)  # store key in UserRole=256
-            self.queue_list.addItem(li)
+        existing = self._find_row_by_url(task.request.url)
+        if existing is not None:
+            existing.setText(self._task_text(task))
+            return
+        li = QListWidgetItem(self._task_text(task))
+        li.setData(Qt.ItemDataRole.UserRole, task.request.url)  # key for later updates
+        self.queue_list.addItem(li)
 
     def _task_text(self, task: DownloadTask) -> str:
         site = task.request.site.value if task.request.site else "?"

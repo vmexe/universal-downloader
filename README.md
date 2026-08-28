@@ -46,6 +46,18 @@ universal-downloader
 python -m downloader.app.main
 ```
 
+### One-command launcher (auto-setup)
+
+Don't want to think about virtualenvs? Just run the platform launcher — it
+creates the venv and installs dependencies automatically on first use:
+
+```bash
+./run.sh              # Linux / macOS
+run.cmd               # Windows (double-click from Explorer or run in cmd)
+```
+
+These are handy for end users and new contributors who just want the app to open.
+
 ## Using the core API (headless)
 
 ```python

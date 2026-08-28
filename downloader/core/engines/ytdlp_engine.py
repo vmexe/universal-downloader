@@ -38,9 +38,9 @@ _FORMAT_MAP = {
 }
 
 _AUDIO_CODEC = {
-    Format.MP3: "libmp3lame",
+    Format.MP3: "mp3",
     Format.M4A: "aac",
-    Format.OPUS: "libopus",
+    Format.OPUS: "opus",
     Format.FLAC: "flac",
 }
 
