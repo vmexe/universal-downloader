@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "universal-downloader"
+version = "0.1.0"
+description = "Universal cross-platform downloader for YouTube, Spotify, Reddit, X, TikTok, Instagram and more."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Universal Downloader Contributors" }]
+keywords = ["downloader", "youtube", "spotify", "yt-dlp", "qt"]
+
+dependencies = [
+    "yt-dlp>=2025.1.1",
+    "spotdl>=4.2.0",
+    "gallery-dl>=1.27.0",
+    "PySide6>=6.7.0",
+    "platformdirs>=4.2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "ruff>=0.6.0",
+]
+
+[project.scripts]
+universal-downloader = "downloader.app.main:main"
+
+[tool.setuptools.packages.find]
+include = ["downloader*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
