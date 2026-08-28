@@ -5,6 +5,9 @@ on:
   push:
     tags: ["v*"]            # build on version tags
 
+env:
+  RELEASE_VERSION: ${{ github.ref_name }}
+
 jobs:
   build:
     name: Build ${{ matrix.os }}
@@ -53,20 +56,28 @@ jobs:
           FFMPEG_PATH: ${{ env.FFMPEG_PATH }}
         run: pyinstaller --clean --noconfirm packaging/universal-downloader.spec
 
-      - name: Collect artifacts (Unix)
-        if: runner.os != 'Windows'
+      - name: Package Linux archive
+        if: runner.os == 'Linux'
         run: |
           mkdir -p release
-          cp -r dist/universal-downloader release/
+          tar -czf "release/universal-downloader-${RELEASE_VERSION}-linux-x86_64.tar.gz" -C dist universal-downloader
 
-      - name: Collect artifacts (Windows)
+      - name: Package macOS archive
+        if: runner.os == 'macOS'
+        run: |
+          mkdir -p release
+          tar -czf "release/universal-downloader-${RELEASE_VERSION}-macos-universal.tar.gz" -C dist universal-downloader
+
+      - name: Package Windows archive
         if: runner.os == 'Windows'
         shell: bash
         run: |
           mkdir -p release
-          cp -r dist/universal-downloader release/
+          cd dist
+          7z a -tzip "universal-downloader-${RELEASE_VERSION}-windows-x86_64.zip" universal-downloader
+          mv "universal-downloader-${RELEASE_VERSION}-windows-x86_64.zip" ../release/
 
-      - name: Upload artifacts
+      - name: Upload archive
         uses: actions/upload-artifact@v4
         with:
           name: universal-downloader-${{ matrix.os }}
@@ -84,8 +95,30 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           path: artifacts
+          merge-multiple: true
+
       - name: Create Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: artifacts/**/*
-          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          shopt -s globstar nullglob
+          files=(artifacts/*.zip artifacts/*.tar.gz)
+          echo "Uploading ${#files[@]} archives:"
+          for f in "${files[@]}"; do echo "  - $f"; done
+
+          cat > /tmp/release-notes.md <<'EOF'
+          Cross-platform build of Universal Downloader.
+
+          ## Download for your platform
+          - **Windows**: the `.zip` ending in `windows-x86_64` (extract and run `universal-downloader.exe`)
+          - **Linux**: the `.tar.gz` ending in `linux-x86_64` (extract and run `universal-downloader`)
+          - **macOS**: the `.tar.gz` ending in `macos-universal` (extract and run `universal-downloader`)
+
+          Extract the folder and run the executable. First launch may take a few seconds.
+          EOF
+
+          gh release create "${{ github.ref_name }}" \
+            --repo "${{ github.repository }}" \
+            --title "Universal Downloader ${{ github.ref_name }}" \
+            --notes-file /tmp/release-notes.md \
+            "${files[@]}"
