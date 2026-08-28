@@ -60,3 +60,19 @@ jobs:
         env:
           QT_QPA_PLATFORM: offscreen
         run: python -c "from PySide6.QtWidgets import QApplication; import sys; app=QApplication(sys.argv); from downloader.app.main import MainWindow; MainWindow(); print('GUI OK')"
+
+  # Aggregates lint + the full test matrix into a single fixed check name so
+  # branch protection can require one stable context that reflects everything.
+  ci:
+    name: CI check
+    runs-on: ubuntu-latest
+    needs: [lint, test]
+    if: always()
+    steps:
+      - name: Aggregate result
+        run: |
+          if [[ "${{ needs.lint.result }}" != "success" || "${{ needs.test.result }}" != "success" ]]; then
+            echo "One or more required jobs failed."
+            exit 1
+          fi
+          echo "All CI jobs passed."
