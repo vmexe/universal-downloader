@@ -41,7 +41,16 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e . pyinstaller
 
+      - name: Locate ffmpeg for bundling
+        shell: bash
+        run: |
+          FFMPEG_PATH="$(command -v ffmpeg || true)"
+          echo "FFMPEG_PATH=$FFMPEG_PATH" >> "$GITHUB_ENV"
+          echo "Found ffmpeg at: ${FFMPEG_PATH:-none}"
+
       - name: Build with PyInstaller
+        env:
+          FFMPEG_PATH: ${{ env.FFMPEG_PATH }}
         run: pyinstaller --clean --noconfirm packaging/universal-downloader.spec
 
       - name: Collect artifacts (Unix)
